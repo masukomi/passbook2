@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/lgleasain/passbook.png)](https://travis-ci.org/lgleasain/passbook)
+# Njiuko/Unidy Developer Notes
+The passbook is not working since ruby version 2.7. This fork fixes the issue and also allows loading certificates from memory.
 
 # passbook
 
