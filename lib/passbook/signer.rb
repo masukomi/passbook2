@@ -39,7 +39,7 @@ module Passbook
 
     def file_data(data, type)
       File.read(data)
-    rescue Errno::ENOENT
+    rescue Errno::ENOENT, Errno::ENAMETOOLONG
       raise "missing #{type} file or data" if data.nil?
       data
     end
