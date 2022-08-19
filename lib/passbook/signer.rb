@@ -14,7 +14,7 @@ module Passbook
     end
 
     def sign(data)
-      wwdc  = OpenSSL::X509::Certificate.new File.read(wwdc_cert)
+      wwdc  = OpenSSL::X509::Certificate.new file_data(wwdc_cert, :wwdc_cert)
       pk7   = OpenSSL::PKCS7.sign key_hash[:cert], key_hash[:key], data.to_s, [wwdc], OpenSSL::PKCS7::BINARY | OpenSSL::PKCS7::DETACHED
       data  = OpenSSL::PKCS7.write_smime pk7
 
@@ -29,12 +29,19 @@ module Passbook
     def compute_cert
       @key_hash = {}
       if key
-        @key_hash[:key]  = OpenSSL::PKey::RSA.new File.read(key), password
-        @key_hash[:cert] = OpenSSL::X509::Certificate.new File.read(certificate)
+        @key_hash[:key]  = OpenSSL::PKey::RSA.new file_data(key, :key), password
+        @key_hash[:cert] = OpenSSL::X509::Certificate.new file_data(certificate, :cert)
       else
         p12 = OpenSSL::PKCS12.new File.read(certificate), password
         @key_hash[:key], @key_hash[:cert] = p12.key, p12.certificate
       end
+    end
+
+    def file_data(data, type)
+      File.read(data)
+    rescue Errno::ENOENT
+      raise "missing #{type} file or data" if data.nil?
+      data
     end
   end
 end
