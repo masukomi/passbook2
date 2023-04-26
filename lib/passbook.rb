@@ -10,7 +10,7 @@ module Passbook
   mattr_accessor :certificate,
                  :password,
                  :apple_intermediate_cert,
-                 :rsa_public_key,
+                 :rsa_private_key,
                  :notification_cert,
                  :notification_gateway,
                  :notification_passphrase

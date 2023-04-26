@@ -6,7 +6,7 @@ describe 'Signer'  do
     context 'using default config info' do
       before do
         expect(Passbook).to(receive(:password).and_return 'password')
-        expect(Passbook).to(receive(:rsa_public_key).and_return 'my_rsa_key')
+        expect(Passbook).to(receive(:rsa_private_key).and_return 'my_rsa_key')
         expect(Passbook).to(receive(:certificate).and_return 'my_X509_certificate')
         expect(Passbook).to(
           receive(:apple_intermediate_cert)
@@ -24,8 +24,8 @@ describe 'Signer'  do
           let(:signer){
             Passbook::Signer.new
           }
-          it "should contain rsa_public_key" do
-            expect(signer.rsa_public_key).to(eq('my_rsa_key'))
+          it "should contain rsa_private_key" do
+            expect(signer.rsa_private_key).to(eq('my_rsa_key'))
           end
           it "should contain certificate" do
             expect(signer.certificate).to(eq('my_X509_certificate'))
