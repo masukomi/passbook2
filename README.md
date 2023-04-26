@@ -1,10 +1,7 @@
-[![Build Status](https://travis-ci.org/lgleasain/passbook.png)](https://travis-ci.org/lgleasain/passbook)
-# Njiuko/Unidy Developer Notes
-The passbook is not working since ruby version 2.7. This fork fixes the issue and also allows loading certificates from memory.
-
 # passbook
 
-The passbook gem let's you create a pkpass for passbook in iOS 6+
+The passbook gem let's you create a pkpass files for Apple's PassKit. 
+Unlike the other options it's been updated to work with OpenSSL 3.0 and Ruby 3.x. As such it no longer uses p12 files.
 
 ## Installation
 
@@ -59,21 +56,13 @@ Create initializer
 Configure your config/initializers/passbook.rb
 ```
     Passbook.configure do |passbook|
-      passbook.wwdc_cert = Rails.root.join('wwdc_cert.pem')
-      passbook.p12_certificate = Rails.root.join('cert.p12')
-      passbook.p12_password = 'cert password'
+      passbook.apple_intermediate_cert = Rails.root.join('AppleWWDRCAG6.cer')
+      passbook.certificate = Rails.root.join('my_generated_cert.cer')
+      passbook.rsa_public_key = Rails.root.join('my_public_key.pem')
+      passbook.password = 'RSA public key password'
     end
 ```
 
-If you are running this on a different machine from what you used to create your WWDC keys
-```
-    Passbook.configure do |passbook|
-      passbook.wwdc_cert = Rails.root.join('wwdc_cert.pem')
-      passbook.p12_key = Rails.root.join('key.pem')
-      passbook.p12_certificate = Rails.root.join('certificate.pem')
-      passbook.p12_password = 'cert password'
-    end
-```
 If you are using Sinatra you can place this in the file you are executing or in a file that you do a require on.  You would also not reference Rails.root when specifying your file path.
 
 If You are doing push notifications then you will need to add some extra configuration options,  namely a push notification certificate and a notification gateway certificate.  Look at the Grocer gem documentation to find information on how to create this certificate.  Settings you will want to use for the notification gateway are either 'gateway.push.apple.com' for production,  'gateway.sandbox.push.apple.com' for development and 'localhost' for unit tests.
