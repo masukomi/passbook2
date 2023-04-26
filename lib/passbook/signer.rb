@@ -3,41 +3,73 @@ require 'base64'
 
 module Passbook
   class Signer
-    attr_accessor :certificate, :password, :key, :wwdc_cert, :key_hash, :p12_cert
+    attr_accessor :certificate,
+                  :password,
+                  :rsa_public_key,
+                  :apple_intermediate_cert,
+                  :rsa_public_key_hash,
+                  :p12_cert
+    attr_reader :key_hash
 
     def initialize(params = {})
-      @certificate = params[:certificate] || Passbook.p12_certificate
-      @password    = params[:password] || Passbook.p12_password
-      @key         = params[:key] || (params.empty? ? Passbook.p12_key : nil)
-      @wwdc_cert   = params[:wwdc_cert] || Passbook.wwdc_cert
+
+      # Path to your X509 cert. This is downloaded after generating
+      # a certificate from your apple Pass Type ID on apple's developer site
+      @certificate = params[:certificate] || Passbook.certificate
+
+      # Path to the .pem file generated from public key of the RSA keypair
+      # that was generated when you made a Certificate Signing Request
+      # It'll be in your keychain under the "Common Name" you specified
+      # for the signing request.
+      @rsa_public_key         = params[:rsa_public_key] || Passbook.rsa_public_key
+
+      # this should be the password that goes along with the rsa public key
+      @password    = params[:password] || Passbook.password
+
+      # "Apple Intermediate Certificate Worldwide Developer Relations" certificate
+      # downloaded from here <https://www.apple.com/certificateauthority/>
+      # Path to your Apple Intermediate Certificate Worldwide Developer Relations
+      # cert.
+      # downloaded from here https://www.apple.com/certificateauthority/
+      # download that .cer file (binary)
+      @apple_intermediate_cert   = params[:apple_intermediate_cert] || Passbook.apple_intermediate_cert
       compute_cert
     end
 
     def sign(data)
-      wwdc  = OpenSSL::X509::Certificate.new file_data(wwdc_cert)
-      pk7   = OpenSSL::PKCS7.sign key_hash[:cert], key_hash[:key], data.to_s, [wwdc], OpenSSL::PKCS7::BINARY | OpenSSL::PKCS7::DETACHED
-      data  = OpenSSL::PKCS7.write_smime pk7
+      apple_cert  = OpenSSL::X509::Certificate.new file_data(apple_intermediate_cert)
+      # In PKCS#7 SignedData, attached and detached formats are supported… In
+      # detached format, data that is signed is not embedded inside the
+      # SignedData package instead it is placed at some external location…
+
+      pk7   = OpenSSL::PKCS7.sign(
+        key_hash[:certificate],
+        key_hash[:rsa_public_key],
+        data.to_s,
+        [apple_cert],
+        OpenSSL::PKCS7::BINARY | OpenSSL::PKCS7::DETACHED
+      )
+      pk7_data  = OpenSSL::PKCS7.write_smime pk7
 
       str_debut = "filename=\"smime.p7s\"\n\n"
-      data      = data[data.index(str_debut)+str_debut.length..data.length-1]
+      pk7_data      = pk7_data[pk7_data.index(str_debut)+str_debut.length..pk7_data.length-1]
       str_end   = "\n\n------"
-      data      = data[0..data.index(str_end)-1]
+      pk7_data      = pk7_data[0..pk7_data.index(str_end)-1]
 
-      Base64.decode64(data)
+      Base64.decode64(pk7_data)
     end
 
     def compute_cert
-      @key_hash = {}
-      if key
-        @key_hash[:key]  = OpenSSL::PKey::RSA.new file_data(key), password
-        @key_hash[:cert] = OpenSSL::X509::Certificate.new file_data(certificate)
-      else
-        p12 = OpenSSL::PKCS12.new File.read(certificate), password
-        @key_hash[:key], @key_hash[:cert] = p12.key, p12.certificate
-      end
+      @key_hash = {
+        rsa_public_key: OpenSSL::PKey::RSA.new(file_data(rsa_public_key), password),
+        certificate: OpenSSL::X509::Certificate.new(file_data(certificate))
+      }
     end
 
     def file_data(data)
+      raise "file_data passed nil" if data.nil?
+      return data if data.is_a? String
+
       data.respond_to?(:read) ? data.read : File.read(data)
     end
   end

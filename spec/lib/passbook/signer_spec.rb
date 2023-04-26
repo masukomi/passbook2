@@ -3,82 +3,98 @@ require 'spec_helper'
 describe 'Signer'  do
   context 'signatures' do
 
-    context 'p12_cert_and_key' do
-      context 'pem p12 certs' do
-        context 'using config file certificates' do
-          before do
-            Passbook.should_receive(:p12_password).and_return 'password'
-            Passbook.should_receive(:p12_key).and_return 'my_p12_key'
-            Passbook.should_receive(:p12_certificate).and_return 'my_p12_certificate'
-            Passbook.should_receive(:wwdc_cert).and_return 'i_love_robots'
-            File.should_receive(:read).with('my_p12_key').and_return 'my_p12_key_file'
-            File.should_receive(:read).with('my_p12_certificate').and_return 'my_p12_certificate_file'
-            OpenSSL::PKey::RSA.should_receive(:new).with('my_p12_key_file', 'password').and_return 'my_rsa_key'
-            OpenSSL::X509::Certificate.should_receive(:new).with('my_p12_certificate_file').and_return 'my_ssl_p12_cert'
-          end
-
-          subject {Passbook::Signer.new.key_hash}
-          its([:key]) {should eq 'my_rsa_key'}
-          its([:cert]) {should eq 'my_ssl_p12_cert'}
-        end
-
-        context 'using passed in certificates' do
-          before do
-            Passbook.should_receive(:p12_password).never
-            Passbook.should_receive(:p12_key).never
-            Passbook.should_receive(:p12_certificate).never
-            Passbook.should_receive(:wwdc_cert).never
-            File.should_receive(:read).with('my_p12_key').and_return 'my_p12_key_file'
-            File.should_receive(:read).with('my_p12_certificate').and_return 'my_p12_certificate_file'
-            OpenSSL::PKey::RSA.should_receive(:new).with('my_p12_key_file', 'password').and_return 'my_rsa_key'
-            OpenSSL::X509::Certificate.should_receive(:new).with('my_p12_certificate_file').and_return 'my_ssl_p12_cert'
-          end
-
-          subject {Passbook::Signer.new(certificate: 'my_p12_certificate', password: 'password', 
-                                        key: 'my_p12_key', wwdc_cert: 'i_love_robots').key_hash}
-          its([:key]) {should eq 'my_rsa_key'}
-          its([:cert]) {should eq 'my_ssl_p12_cert'}
-        end
+    context 'using default config info' do
+      before do
+        expect(Passbook).to(receive(:password).and_return 'password')
+        expect(Passbook).to(receive(:rsa_public_key).and_return 'my_rsa_key')
+        expect(Passbook).to(receive(:certificate).and_return 'my_X509_certificate')
+        expect(Passbook).to(
+          receive(:apple_intermediate_cert)
+            .and_return( 'apple_intermediate_cert_file')
+        )
       end
 
-      context 'p12 files' do
-        let (:p12) { double('OpenSSL::PKCS12') }
-        let (:final_hash) {{:key => 'my_final_p12_key', :cert => 'my_final_p12_cert'}}
-        context 'using config file certificates' do
+      context "getting the default config" do
+        context "ignoring signing" do
           before do
-            p12.should_receive(:key).and_return final_hash[:key]
-            p12.should_receive(:certificate).and_return final_hash[:cert]
-            Passbook.should_receive(:p12_password).and_return 'password'
-            Passbook.should_receive(:wwdc_cert).and_return 'i_love_robots'
-            Passbook.should_receive(:p12_certificate).and_return 'my_p12_cert'
-            Passbook.should_receive(:p12_key).and_return nil
-            File.should_receive(:read).with('my_p12_cert').and_return 'my_p12_cert_file'
-            OpenSSL::PKCS12.should_receive(:new).with('my_p12_cert_file', 'password').and_return p12
+            # don't care if signing works yet. just dealing with defaults
+            allow_any_instance_of(Passbook::Signer).to(receive(:compute_cert))
           end
 
-          subject {Passbook::Signer.new.key_hash}
-          its([:key]) {should eq final_hash[:key]}
-          its([:cert]) {should eq final_hash[:cert]}
+          let(:signer){
+            Passbook::Signer.new
+          }
+          it "should contain rsa_public_key" do
+            expect(signer.rsa_public_key).to(eq('my_rsa_key'))
+          end
+          it "should contain certificate" do
+            expect(signer.certificate).to(eq('my_X509_certificate'))
+          end
+          it "should contain apple_intermediate_cert" do
+            expect(signer.apple_intermediate_cert).to(eq('apple_intermediate_cert_file'))
+          end
+          it "should contain password" do
+            expect(signer.password).to(eq('password'))
+          end
         end
+      end
+      context "computing cert" do
+        before do
+            expect(OpenSSL::PKey::RSA).to(
+              receive(:new)
+                .with('my_rsa_key', 'password')
+                .and_return 'my_rsa_key' # bogus example
+            )
 
-        context 'using passed in certificates' do
-          before do
-            p12.should_receive(:key).and_return final_hash[:key]
-            p12.should_receive(:certificate).and_return final_hash[:cert]
-            Passbook.should_receive(:p12_password).never
-            Passbook.should_receive(:p12_key).never
-            Passbook.should_receive(:p12_certificate).never
-            Passbook.should_receive(:wwdc_cert).never
-            File.should_receive(:read).with('my_p12_cert').and_return 'my_p12_cert_file'
-            OpenSSL::PKCS12.should_receive(:new).with('my_p12_cert_file', 'password').and_return p12
+            expect(OpenSSL::X509::Certificate).to(
+                receive(:new)
+                .with('my_X509_certificate')
+                .and_return 'my_X509_data' # bogus example
+            )
+        end
+        context "signing" do
+          let(:signer){Passbook::Signer.new}
+
+          # this is just checking that
+          # the inputs and outputs of the cert things
+          # are all wired together correctly
+          it "should do the signing dance" do
+
+            # 2nd X509 cert loading...
+            expect(OpenSSL::X509::Certificate).to(
+                receive(:new)
+                .with('apple_intermediate_cert_file')
+                .and_return 'apples_X509_data' # bogus example
+            )
+
+            expect(OpenSSL::PKCS7).to(
+                receive(:sign)
+                  .with(
+                    'my_X509_data', # from above
+                    'my_rsa_key',   # also from above
+                    'passbook_sign_data', # the param to Signer#sign(...)
+                    ['apples_X509_data'],
+                    OpenSSL::PKCS7::BINARY | OpenSSL::PKCS7::DETACHED
+                  )
+                  .and_return('pk7') # bogus example
+              )
+            expect(OpenSSL::PKCS7).to(
+                receive(:write_smime)
+                  .with('pk7')
+                  .and_return("filename=\"smime.p7s\"\n\nsecret_pk7_stuff\n\n------")
+              )
+            expect(Base64).to(
+              receive(:decode64)
+                .with('secret_pk7_stuff') #from above
+            )
+
+            # and... kick it all off
+            signer.sign('passbook_sign_data')
+
           end
-
-          subject {Passbook::Signer.new(certificate: 'my_p12_cert', password: 'password', 
-                                        wwdc_cert: 'i_love_robots').key_hash}
-          its([:key]) {should eq final_hash[:key]}
-          its([:cert]) {should eq final_hash[:cert]}
         end
       end
     end
+
   end
 end
