@@ -44,8 +44,12 @@ describe Rack::PassbookRack  do
     context 'device register delete' do
       context 'a valid path' do
         subject {passbook_rack.find_method(register_delete_path)}
-        its([:method]) {should eq 'device_register_delete'}
-        its([:params]) {should eq(register_delete_params) }
+        it "should have expected method" do
+          expect(subject[:method]).to(eq('device_register_delete'))
+        end
+        it "should have expected params" do
+          expect(subject[:params]).to(eq(register_delete_params))
+        end
       end
 
       it_behaves_like 'a method that can handle non passbook urls'
@@ -54,19 +58,29 @@ describe Rack::PassbookRack  do
 
     context 'passes for device' do
       subject {passbook_rack.find_method(passes_for_device_path)}
-      its([:method]) {should eq 'passes_for_device'}
-      its([:params]) {should eq passes_for_device_params }
+      it "should have expected method" do
+        expect(subject[:method]).to(eq('passes_for_device'))
+      end
+      it "should have expected params" do
+        expect(subject[:params]).to(eq(passes_for_device_params))
+      end
     end
 
     context 'latest pass' do
       subject {passbook_rack.find_method(latest_pass_path)}
-      its([:method]) {should eq 'latest_pass'}
-      its([:params]) {should eq(latest_pass_params) }
+      it "should have expected method" do
+        expect(subject[:method]).to(eq('latest_pass'))
+      end
+      it "should have expected params" do
+        expect(subject[:params]).to(eq(latest_pass_params))
+      end
     end
 
     context 'latest pass' do
       subject {passbook_rack.find_method(log_path)}
-      its([:method]) {should eq 'log'}
+      it "should have expected method" do
+        expect(subject[:method]).to(eq('log'))
+      end
     end
   end
 
@@ -80,7 +94,9 @@ describe Rack::PassbookRack  do
       end
 
       subject {last_response}
-      its(:status) {should eq 201}
+      it "should have returned 201" do
+        expect(subject.status).to(eq(201))
+      end
     end
 
     context 'register pass with authToken' do
@@ -91,7 +107,9 @@ describe Rack::PassbookRack  do
       end
 
       subject {last_response}
-      its(:status) {should eq 201}
+      it "should have returned a 201" do
+        expect(subject.status).to(eq(201))
+      end
     end
 
     context 'passes for device' do
@@ -153,10 +171,24 @@ describe Rack::PassbookRack  do
         end
 
         subject {last_response}
-        its(:status) {should eq 200}
-        its(:header) {should eq({'Content-Type' => 'application/vnd.apple.pkpass',
-          'Content-Disposition' => 'attachment', 'filename' => '27-1.pkpass', 'last-modified' => '1442401010', 'Content-Length' => '21'})}
-        its(:body) {should eq raw_pass[:latest_pass]}
+        it "should have returned a 200" do
+          expect(subject.status).to(eq(200))
+        end
+        it "should have the expected header" do
+
+        expect(subject.header).to(eq(
+                {
+                  'Content-Type' => 'application/vnd.apple.pkpass',
+                  'Content-Disposition' => 'attachment',
+                  'filename' => '27-1.pkpass',
+                  'last-modified' => '1442401010',
+                  'Content-Length' => '21'
+                }
+                                  ))
+        end
+        it "should have the expected body" do
+          expect(subject.body).to(eq(raw_pass[:latest_pass]))
+        end
       end
 
       context 'no pass' do
@@ -167,7 +199,9 @@ describe Rack::PassbookRack  do
         end
 
         subject {last_response}
-        its(:status) {should eq 204}
+        it "should have returned a 204" do
+          expect(subject.status).to(eq(204))
+        end
       end
     end
 
@@ -179,7 +213,9 @@ describe Rack::PassbookRack  do
       end
 
       subject {last_response}
-      its(:status) {should eq 200}
+      it "should have returned a 200" do
+        expect(subject.status).to(eq(200))
+      end
     end
 
     context 'unregister pass with authToken' do
@@ -190,7 +226,9 @@ describe Rack::PassbookRack  do
       end
 
       subject {last_response}
-      its(:status) {should eq 200}
+      it "should have returned a 200" do
+        expect(subject.status).to(eq(200))
+      end
     end
 
     context 'log' do
@@ -202,7 +240,9 @@ describe Rack::PassbookRack  do
       end
 
       subject {last_response}
-      its(:status) {should eq 200}
+      it "should have returned a 200" do
+        expect(subject.status).to(eq(200))
+      end
     end
 
     context 'non passbook requests' do
@@ -211,8 +251,12 @@ describe Rack::PassbookRack  do
       end
 
       subject {last_response}
-      its(:status) {should eq 200}
-      its(:body) {should eq 'test app'}
+      it "should have returned a 200" do
+        expect(subject.status).to(eq(200))
+      end
+      it "should have the expected body" do
+        expect(subject.body).to(eq('test app'))
+      end
     end
   end
 
