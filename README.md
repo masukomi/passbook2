@@ -61,6 +61,7 @@ Configure your config/initializers/passbook.rb
       passbook.rsa_public_key = Rails.root.join('my_public_key.pem')
       passbook.password = 'RSA public key password'
     end
+    
 ```
 
 If you are using Sinatra you can place this in the file you are executing or in a file that you do a require on.  You would also not reference Rails.root when specifying your file path.
@@ -139,11 +140,16 @@ We will try to make this cleaner in subsequent releases.
 
 ### Using Different Certificates For Different Passes
 
-Sometime you might want to be able to use different certificates for different passes.  This can be done by passing in a Signer class into your PKPass initializer like so
+Sometime you might want to be able to use different certificates for different passes.  This can be done by passing in a Signer class into your PKPass initializer. You don't have to use environment variables, but it's a good way to make these things easy to rotate in the future when the certs expire.
 
 ```
-  signer = Passbook::Signer.new {certificate: some_cert, password: some_password, key: some_key, wwdc_cert: some_wwdc_cert}
-  pk_pass = Passbook::PKPass.new your_json_data, signer
+  signer = Passbook::Signer.new(
+    certificate:             Rails.root.join(ENV['PASSBOOK_X509_CERTIFICATE']),
+    rsa_private_key:         Rails.root.join(ENV['PASSBOOK_PRIVATE_KEY_PEM']),
+    password:                ENV['PASSBOOK_RSA_PASSWORD'],
+    apple_intermediate_cert: Rails.root.join(ENV['PASSBOOK_APPLE_INTERMEDIATE_CERTIFICATE'])
+  )
+  pk_pass = Passbook::PKPass.new(data, signer)
 
   ....
 ```
