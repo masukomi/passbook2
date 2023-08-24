@@ -57,15 +57,7 @@ module Passbook
       options[:directory] ||= Dir.tmpdir
       desired_path = File.join(options[:directory], options[:file_name])
 
-      temp_file = Tempfile.new(options[:file_name], options[:directory])
-      temp_file.binmode
-      temp_file.write self.stream.string
-      temp_file.close
-
-      File.rename(
-        temp_file.path,
-        desired_path
-      )
+      File.binwrite(desired_path, self.stream.string)
       File.new(desired_path)
     end
 
