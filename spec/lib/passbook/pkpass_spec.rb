@@ -1,4 +1,6 @@
 require 'spec_helper'
+require 'tempfile'
+require 'tmpdir'
 
 describe Passbook  do
 
@@ -44,14 +46,42 @@ describe Passbook  do
 
   let (:signer) {double 'signer'}
   let (:pass) {Passbook::PKPass.new content.to_json, signer}
+  let (:base_path) {'spec/data'}
+  let (:entries) {["pass.json", "manifest.json", "signature", "icon.png", "icon@2x.png", "logo.png", "logo@2x.png"]}
+
+  before :each do
+    pass.addFiles ["#{base_path}/icon.png","#{base_path}/icon@2x.png","#{base_path}/logo.png","#{base_path}/logo@2x.png"]
+    allow(signer).to(receive(:sign).and_return('Signed by the Honey Badger'))
+  end
+  describe "#file" do
+      it "should work with no options", :aggregate_failures do
+        temp_file = pass.file
+        expect(File.basename(temp_file.path)).to(eq('pass.pkpass'))
+        expect(File.dirname(temp_file)).to(eq(Dir.tmpdir))
+      end
+      it "should honor the file_name specified" do
+        temp_file = pass.file(:file_name => "foo.pkpass")
+        expect(File.basename(temp_file)).to(eq('foo.pkpass'))
+      end
+
+      it "should honor the directory specified as a string" do
+        Dir.mktmpdir do |dir| # dir is a String
+          temp_file = pass.file(:directory => dir)
+          expect(File.dirname(temp_file)).to(eq(dir))
+        end
+      end
+
+      it "should honor the directory specified as a Dir" do
+        Dir.mktmpdir do |dir|
+          temp_file = pass.file(:directory => Dir.new(dir))
+          expect(File.dirname(temp_file)).to(eq(dir))
+        end
+
+      end
+    end
 
   context 'outputs' do
-    let (:base_path) {'spec/data'}
-    let (:entries) {["pass.json", "manifest.json", "signature", "icon.png", "icon@2x.png", "logo.png", "logo@2x.png"]}
-
-    before :each do
-      pass.addFiles ["#{base_path}/icon.png","#{base_path}/icon@2x.png","#{base_path}/logo.png","#{base_path}/logo@2x.png"]
-      signer.should_receive(:sign).and_return('Signed by the Honey Badger')
+    before do
       @file_entries = []
       Zip::InputStream::open(zip_path) {|io|
         while (entry = io.get_next_entry)
@@ -63,23 +93,25 @@ describe Passbook  do
     context 'zip file' do
       let(:zip_path) {pass.file.path}
 
-      subject {entries}
-      it {should eq @file_entries}
+      it "should have the expected files" do
+        expect(entries).to(eq(@file_entries))
+      end
     end
 
     context 'StringIO' do
       let (:temp_file) {Tempfile.new("pass.pkpass")}
       let (:zip_path) {
         zip_out = pass.stream
-        zip_out.class.should eq(Class::StringIO)
+        zip_out.class.should eq(StringIO)
         #creating file, re-reading zip to see if correctly formed
         temp_file.write zip_out.string
         temp_file.close
         temp_file.path
       }
 
-      subject {entries}
-      it {should eq @file_entries}
+      it "should contain the expected files" do
+        expect(entries).to(eq(@file_entries))
+      end
 
       after do
         temp_file.delete

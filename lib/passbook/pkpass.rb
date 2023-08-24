@@ -46,14 +46,27 @@ module Passbook
     end
 
     # Return a Tempfile containing our ZipStream
+    # @param options [Hash] :file_name, :directory
+    #   - file_name defaults to 'pass.pkpass'
+    #     a tempfile will be created and renamed to this
+    #   - directory defaults to Dir.tmpdir
+    #     and can be specifed as an absolute string path or a
+    #     Dir object
     def file(options = {})
       options[:file_name] ||= 'pass.pkpass'
-      temp_file = Tempfile.new(options[:file_name])
+      options[:directory] ||= Dir.tmpdir
+      desired_path = File.join(options[:directory], options[:file_name])
+
+      temp_file = Tempfile.new(options[:file_name], options[:directory])
       temp_file.binmode
       temp_file.write self.stream.string
       temp_file.close
 
-      temp_file
+      File.rename(
+        temp_file.path,
+        desired_path
+      )
+      File.new(desired_path)
     end
 
     # Return a ZipOutputStream

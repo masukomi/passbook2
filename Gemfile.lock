@@ -11,6 +11,9 @@ GEM
     commander (4.6.0)
       highline (~> 2.0.0)
     concurrent-ruby (1.2.2)
+    debug (1.8.0)
+      irb (>= 1.5.0)
+      reline (>= 0.3.1)
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
     diff-lcs (1.5.0)
@@ -31,6 +34,10 @@ GEM
     highline (2.0.3)
     i18n (1.13.0)
       concurrent-ruby (~> 1.0)
+    io-console (0.6.0)
+    io-console (0.6.0-java)
+    irb (1.7.4)
+      reline (>= 0.3.6)
     jar-dependencies (0.4.1)
     jeweler (2.3.9)
       builder
@@ -74,6 +81,8 @@ GEM
     rchardet (1.8.0)
     rdoc (6.5.0)
       psych (>= 4.0.0)
+    reline (0.3.8)
+      io-console (~> 0.5)
     rspec (3.12.0)
       rspec-core (~> 3.12.0)
       rspec-expectations (~> 3.12.0)
@@ -112,6 +121,7 @@ PLATFORMS
 DEPENDENCIES
   activesupport
   commander
+  debug
   grocer
   jeweler
   rack-test
