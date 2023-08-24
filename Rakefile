@@ -13,13 +13,12 @@ require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "passbook"
-  gem.homepage = "http://github.com/frozon/passbook"
+  gem.homepage = "https://github.com/ticketsolve/passbook"
   gem.license = "MIT"
   gem.summary = %Q{A IOS Passbook generator.}
   gem.description = %Q{This gem allows you to create IOS Passbooks.  Unlike some,  this works with Rails but does not require it.}
-  gem.email = ['thomas@lauro.fr', 'lgleason@polyglotprogramminginc.com']
-  gem.authors = ['Thomas Lauro', 'Lance Gleason']
-  gem.executables = ['pk']
+  gem.email = ['thomas@lauro.fr', 'lgleason@polyglotprogramminginc.com', 'masukomi@masukomi.org']
+  gem.authors = ['Thomas Lauro', 'Lance Gleason', 'Kay Rhodes']
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
