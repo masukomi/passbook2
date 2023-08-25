@@ -51,71 +51,99 @@ describe Passbook do
   let(:entries) { ['pass.json', 'manifest.json', 'signature', 'icon.png', 'icon@2x.png', 'logo.png', 'logo@2x.png'] }
 
   before :each do
-    pass.addFiles ["#{base_path}/icon.png", "#{base_path}/icon@2x.png", "#{base_path}/logo.png",
-                   "#{base_path}/logo@2x.png"]
     allow(signer).to(receive(:sign).and_return('Signed by the Honey Badger'))
   end
   describe '#file' do
-    it 'should work with no options', :aggregate_failures do
-      temp_file = pass.file
-      expect(File.basename(temp_file.path)).to(eq('pass.pkpass'))
-      expect(File.dirname(temp_file)).to(eq(Dir.tmpdir))
-    end
-    it 'should honor the file_name specified' do
-      temp_file = pass.file(file_name: 'foo.pkpass')
-      expect(File.basename(temp_file)).to(eq('foo.pkpass'))
-    end
+    context 'when adding a file as File' do
+      before do
+        pass.addFile(File.new("#{base_path}/icon.png"))
+        pass.addFiles(
+          [
+            "#{base_path}/icon@2x.png",
+            "#{base_path}/logo.png",
+            "#{base_path}/logo@2x.png"
+          ].map { |x| File.new(x) }
+        )
+      end
 
-    it 'should honor the directory specified as a string' do
-      Dir.mktmpdir do |dir| # dir is a String
-        temp_file = pass.file(directory: dir)
-        expect(File.dirname(temp_file)).to(eq(dir))
+      it 'should work with no options', :aggregate_failures do
+        temp_file = pass.file
+        expect(File.basename(temp_file.path)).to(eq('pass.pkpass'))
+        expect(File.dirname(temp_file)).to(eq(Dir.tmpdir))
       end
     end
-
-    it 'should honor the directory specified as a Dir' do
-      Dir.mktmpdir do |dir|
-        temp_file = pass.file(directory: Dir.new(dir))
-        expect(File.dirname(temp_file)).to(eq(dir))
+    context 'when adding files as strings' do
+      before do
+        pass.addFile("#{base_path}/icon.png")
+        pass.addFiles(
+          [
+            "#{base_path}/icon@2x.png",
+            "#{base_path}/logo.png",
+            "#{base_path}/logo@2x.png"
+          ]
+        )
       end
-    end
-  end
 
-  context 'outputs' do
-    before do
-      @file_entries = []
-      Zip::InputStream.open(zip_path) do |io|
-        while (entry = io.get_next_entry)
-          @file_entries << entry.name
+      it 'should work with no options', :aggregate_failures do
+        temp_file = pass.file
+        expect(File.basename(temp_file.path)).to(eq('pass.pkpass'))
+        expect(File.dirname(temp_file)).to(eq(Dir.tmpdir))
+      end
+      it 'should honor the file_name specified' do
+        temp_file = pass.file(file_name: 'foo.pkpass')
+        expect(File.basename(temp_file)).to(eq('foo.pkpass'))
+      end
+
+      it 'should honor the directory specified as a string' do
+        Dir.mktmpdir do |dir| # dir is a String
+          temp_file = pass.file(directory: dir)
+          expect(File.dirname(temp_file)).to(eq(dir))
         end
       end
-    end
 
-    context 'zip file' do
-      let(:zip_path) { pass.file.path }
-
-      it 'should have the expected files' do
-        expect(entries).to(eq(@file_entries))
+      it 'should honor the directory specified as a Dir' do
+        Dir.mktmpdir do |dir|
+          temp_file = pass.file(directory: Dir.new(dir))
+          expect(File.dirname(temp_file)).to(eq(dir))
+        end
       end
-    end
+      context 'outputs' do
+        before do
+          @file_entries = []
+          Zip::InputStream.open(zip_path) do |io|
+            while (entry = io.get_next_entry)
+              @file_entries << entry.name
+            end
+          end
+        end
 
-    context 'StringIO' do
-      let(:temp_file) { Tempfile.new('pass.pkpass') }
-      let(:zip_path) do
-        zip_out = pass.stream
-        zip_out.class.should eq(StringIO)
-        # creating file, re-reading zip to see if correctly formed
-        temp_file.write zip_out.string
-        temp_file.close
-        temp_file.path
-      end
+        context 'zip file' do
+          let(:zip_path) { pass.file.path }
 
-      it 'should contain the expected files' do
-        expect(entries).to(eq(@file_entries))
-      end
+          it 'should have the expected files' do
+            expect(entries).to(eq(@file_entries))
+          end
+        end
 
-      after do
-        temp_file.delete
+        context 'StringIO' do
+          let(:temp_file) { Tempfile.new('pass.pkpass') }
+          let(:zip_path) do
+            zip_out = pass.stream
+            zip_out.class.should eq(StringIO)
+            # creating file, re-reading zip to see if correctly formed
+            temp_file.write zip_out.string
+            temp_file.close
+            temp_file.path
+          end
+
+          it 'should contain the expected files' do
+            expect(entries).to(eq(@file_entries))
+          end
+
+          after do
+            temp_file.delete
+          end
+        end
       end
     end
   end

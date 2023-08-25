@@ -93,7 +93,8 @@ module Passbook
         if file.class == Hash
           sha1s[file[:name]] = Digest::SHA1.hexdigest file[:content]
         else
-          sha1s[File.basename(file)] = Digest::SHA1.file(file).hexdigest
+          # either a File or a Pathname
+          sha1s[File.basename(file)] = Digest::SHA1.file(File.absolute_path(file)).hexdigest
         end
       end
 
