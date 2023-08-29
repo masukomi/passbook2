@@ -7,6 +7,8 @@ module Passbook
       raise "No passes provided" if pk_passes.size < 1
       raise "multipass files must have the .pkpasses extension" \
             unless multipass_file_path.end_with? ".pkpasses"
+      raise "passes must be PKPass objects" \
+            unless pk_passes.all? { |pass| pass.is_a? Passbook::PKPass }
       temp_dir = Dir.mktmpdir
       pass_counter = 0
       Zip::File.open(multipass_file_path, create: true) do |zipfile|
