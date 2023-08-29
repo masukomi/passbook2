@@ -1,5 +1,6 @@
 require "passbook/version"
 require "passbook/pkpass"
+require "passbook/pk_multi_pass"
 require "passbook/signer"
 require 'active_support/core_ext/module/attribute_accessors'
 require 'passbook/push_notification'
