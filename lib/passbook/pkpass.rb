@@ -23,6 +23,10 @@ module Passbook
       @manifest_files += files
     end
 
+    def files
+      @manifest_files
+    end
+
     # for backwards compatibility
     def json=(json)
       @pass = json
