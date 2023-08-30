@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Thomas Lauro".freeze, "Lance Gleason".freeze, "Kay Rhodes".freeze]
-  s.date = "2023-08-24"
+  s.date = "2023-08-30"
   s.description = "This gem allows you to create IOS Passbooks.  Unlike some,  this works with Rails but does not require it.".freeze
   s.email = ["thomas@lauro.fr".freeze, "lgleason@polyglotprogramminginc.com".freeze, "masukomi@masukomi.org".freeze]
   s.extra_rdoc_files = [
