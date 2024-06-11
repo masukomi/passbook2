@@ -9,6 +9,9 @@ module Passbook
 
     TYPES = %w(boarding-pass coupon event-ticket store-card generic)
 
+    # Initializes a new Passbook::PKPass object
+    # @param pass [String] JSON string representing the pass
+    # @param init_signer [Passbook::Signer] (optional) a signer object
     def initialize(pass, init_signer = nil)
       @pass           = pass
       @manifest_files = []
@@ -76,17 +79,17 @@ module Passbook
 
     def check_pass(manifest)
       # Check for default images
-      raise 'Icon missing' unless manifest.include?('icon.png')
-      raise 'Icon@2x missing' unless manifest.include?('icon@2x.png')
+      raise 'Icon missing'                         unless manifest.include?('icon.png')
+      raise 'Icon@2x missing'                      unless manifest.include?('icon@2x.png')
 
       # Check for developer field in JSON
-      raise 'Pass Type Identifier missing' unless @pass.include?('passTypeIdentifier')
-      raise 'Team Identifier missing' unless @pass.include?('teamIdentifier')
-      raise 'Serial Number missing' unless @pass.include?('serialNumber')
+      raise 'Pass Type Identifier missing'         unless @pass.include?('passTypeIdentifier')
+      raise 'Team Identifier missing'              unless @pass.include?('teamIdentifier')
+      raise 'Serial Number missing'                unless @pass.include?('serialNumber')
       raise 'Organization Name Identifier missing' unless @pass.include?('organizationName')
-      raise 'Format Version' unless @pass.include?('formatVersion')
-      raise 'Format Version should be a numeric' unless JSON.parse(@pass)['formatVersion'].is_a?(Numeric)
-      raise 'Description' unless @pass.include?('description')
+      raise 'Format Version'                       unless @pass.include?('formatVersion')
+      raise 'Format Version should be a numeric'   unless JSON.parse(@pass)['formatVersion'].is_a?(Numeric)
+      raise 'Description'                          unless @pass.include?('description')
     end
 
     def create_manifest
