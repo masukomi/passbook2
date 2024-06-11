@@ -1,144 +1,131 @@
-# passbook
+# passbook2
 
 The passbook gem let's you create a pkpass files for Apple's PassKit. 
-Unlike the other options it's been updated to work with OpenSSL 3.0 and Ruby 3.x. As such it no longer uses p12 files.
+It is a fork of the "passbook" gem that has been updated to work with OpenSSL 3.0 and Ruby 3.x. It no longer uses p12 files which because they are no longer supported by Apple.
+
+Apple's [PassKit](https://developer.apple.com/documentation/passkit_apple_pay_and_wallet) is used for processing Apple Pay payments & distributing tickets. This library is currently concerned with simplifying the process of generating a `.pass` bundle for distribution to your users. It's been thoroughly tested as a means of distributing even tickets to iOS devices.
+
+This library does _not_ address updating information on tickets you've already distributed.
+
+Note: This is a fork of the original passbook gem that supports Apple's current requirements & cleans up a bunch of things. The original gem has been abandoned for years. 
 
 ## Installation
 
-Include the passbook gem in your project.
-
-IE:  In your Gemfile
-```
-gem 'passbook'
-```
-
-## Quick Start
-
-If you want to jump in without having to integrate this into your code you can use the command line options to get started.  Start by installing the gem
+Include the passbook2 gem in your project.
 
 ```
-gem install passbook
+gem 'passbook2'
 ```
-
-Then go to a directory that you want to generate your pass under and use the "pk generate command".  (note:  do not use spaces in your passname or else strange things will happen.)
-
-```
-pk generate your_pass_name
-```
-
-This will generate a directory called your_pass_name.  Edit your pass.json file in the your_pass_directory to have a valid team identifier and passTypeIdentifier and create your certificates if you haven't yet. [See this article for information on how to do this.](http://www.raywenderlich.com/20734/beginning-passbook-part-1#more-20734)
-
-Assuming that you have put your certificate files etc. in your working directory.
-
-```
-pk build your_pass_name -w ./wwdc.pem -c ./your_pass_name.p12 -p ''
-```
-The wwdc.pem file is the exported Apple World Wide Developer Relations Certification Authority certificate file from your key manager and the your_pass_name.p12 is the exported p12 file from your pass certificate.
-
-If you are not building your passes on a mac or just prefer to use the pass certificate and key pem file.
-
-```
-pk build passbook_gem_name -w ./wwdc.pem -c ./your_pass_name_certificate.pem -k your_pass_name_key.pem -p '12345'
-```
-
-Now you can drag the file over to a simulator or send it to your iPhone via e-mail to view your pass.
-
 
 ## Configuration
 
-Create initializer
-```
-    rails g passbook:config
-    or with params
-    rails g passbook:config [Absolute path to the wwdc cert file] [Absolute path to your cert.p12 file] [Password for your certificate]
+
+
+```ruby
+
+      # Note: the pb_confg variable below is typically a singleton 
+      # configuration object that has knowledge of where you store 
+      # your certificate files & related passwords
+      # You definitely should not be hardcoding that information.
+      pb_config = <your config object>
+
+      Passbook.configure do |passbook|
+
+        # Path to your wwdc cert file# path to the latest
+        # "Apple Intermediate Certificate Worldwide Developer Relations" certificate
+        # (.cer) file downloaded from here https://www.apple.com/certificateauthority/
+        # and placed somewhere under the rails root. It doesn't matter where.
+        # ⚠❗ these expire
+        passbook.apple_intermediate_cert = pb_config.apple_intermediate_certificate
+
+        # Path to your X509 cert. This is downloaded after generating
+        # a certificate from your apple Pass Type ID on apple's developer site
+        passbook.certificate = pb_config.x509_certificate
+
+        # Path to the .pem file generated from public key of the RSA keypair
+        # that was generated when you made a Certificate Signing Request
+        # It'll be in your keychain under the "Common Name" you specified
+        # for the signing request.
+        passbook.rsa_private_key = pb_config.private_key_pem
+
+        # Password for the .pem file above
+        passbook.password = pb_config.rsa_password
+      end
+
 ```
 
-Configure your config/initializers/passbook.rb
-```
-    Passbook.configure do |passbook|
-      passbook.apple_intermediate_cert = Rails.root.join('AppleWWDRCAG6.cer')
-      passbook.certificate = Rails.root.join('my_generated_cert.cer')
-      passbook.rsa_public_key = Rails.root.join('my_public_key.pem')
-      passbook.password = 'RSA public key password'
-    end
-    
-```
-
-If you are using Sinatra you can place this in the file you are executing or in a file that you do a require on.  You would also not reference Rails.root when specifying your file path.
-
-If You are doing push notifications then you will need to add some extra configuration options,  namely a push notification certificate and a notification gateway certificate.  Look at the Grocer gem documentation to find information on how to create this certificate.  Settings you will want to use for the notification gateway are either 'gateway.push.apple.com' for production,  'gateway.sandbox.push.apple.com' for development and 'localhost' for unit tests.
-```
-    Passbook.configure do |passbook|
-      .....other settings.....
-      passbook.notification_gateway = 'gateway.push.apple.com'
-      passbook.notification_passphrase = 'my_hard_password' (optional)
-      passbook.notification_cert = 'lib/assets/my_notification_cert.pem'
-    end
-```
-
-If you want to also support the push notification endpoints you will also need to include the Rack::PassbookRack middleware.  In rails your config will look something like this.
-```
-  config.middleware.use Rack::PassbookRack
-```
 
 ## Usage
 
-Please refer to apple iOS dev center for how to build cert and json.  [This article is also helpful.](http://www.raywenderlich.com/20734/beginning-passbook-part-1#more-20734)
-```
-    pass = Passbook::PKPass.new 'your json data'
+First create a new `PKPass` object and pass it your pass' JSON data in the initializer. This will be stored in the pass' `pass.json` file.
 
-    # Add file from disk
-    pass.addFile 'file_path'
-
-    # Add file from memory
-    file[:name] = 'file name'
-    file[:content] = 'whatever you want'
-    pass.addFile file
-
-    # Add multiple files
-    pass.addFiles [file_path_1, file_path_2, file_path_3]
-
-    # Add multiple files from memory
-    pass.addFiles [{name: 'file1', content: 'content1'}, {name: 'file2', content: 'content2'}, {name: 'file3', content: 'content3'}]
-
-    # Output a Tempfile
-
-    pkpass = pass.file
-    send_file pkpass.path, type: 'application/vnd.apple.pkpass', disposition: 'attachment', filename: "pass.pkpass"
-
-    # Or a stream
-
-    pkpass = pass.stream
-    send_data pkpass.string, type: 'application/vnd.apple.pkpass', disposition: 'attachment', filename: "pass.pkpass"
-
-```
-If you are using Sinatra you will need to include the 'active_support' gem and will need to require 'active_support/json/encoding'.  Here is an example using the streaming mechanism.
-
-```
-require 'sinatra'
-require 'passbook'
-require 'active_support/json/encoding'
-
-Passbook.configure do |passbook|
-  passbook.p12_password = '12345'
-  passbook.p12_key = 'passkey.pem'
-  passbook.p12_certificate = 'passcertificate.pem'
-  passbook.wwdc_cert = 'WWDR.pem'
-end
-
-get '/passbook' do
-  pass = # valid passbook json.  refer to the wwdc documentation.
-  passbook = Passbook::PKPass.new pass
-  passbook.addFiles ['logo.png', 'logo@2x.png', 'icon.png', 'icon@2x.png']
-  response['Content-Type'] = 'application/vnd.apple.pkpass'
-  attachment 'mypass.pkpass'
-  passbook.stream.string
-end
+``` ruby
+    pass = Passbook::PKPass.new('{"YOUR STRINGIFIED JSON DATA"}')
 ```
 
-We will try to make this cleaner in subsequent releases.
+Then iterate over the files you need to add to the pass. The order you add them in doesn't matter, but the names must adhere to Apple's Passbook naming convention.
 
-### Using Different Certificates For Different Passes
+``` ruby
+    pass.add_file("path/to/icon.png")
+    pass.add_files(["path/to/icon@2x.png", "path/to/thumbnail.png"])
+```
+
+![sample.pass](https://docs-assets.developer.apple.com/published/8d0b7a8673/rendered2x-1616606782.png)
+
+Once you've added everything you need to your pass, it's time to generate the `.pkpass` zip file. 
+
+``` ruby
+  pass.file # returns a Tempfile containing a ZipStream
+  
+  # you can optionally specify the file name and directory to store it in.
+  pass.file({file_name: 'pass.pkpass', directory: Dir.tmpdir})
+
+```
+
+In a Rails app you'd want to send the `.pkpass` data to users with the appropriate mime-type. Here's how to do that.
+
+``` ruby
+      zip_file_path = my_pass.file.path
+      File.open(zip_file_path, "r") do |file|
+        send_data(file.read,
+                  type:        "application/vnd.apple.pkpass",
+                  disposition: "attachment",
+                  filename:    "#{thingy.descriptive_name}.pkpass")
+      end
+```
+
+### Creating MultiPasses 
+
+Apple supports the idea of a MultiPass. This is basically juest a zipped collection of multiple passes. If, for example, someone buys 5 tickets, you can send them a MultiPass with all 5 wallet passes in it. 
+
+A MultiPass must contain between 1 and 10 passes (inclusive). If your user needs more than 10 items you'll just have to convince them to download multiple MultiPasses. This is annoying, but it's Apple's restriction so there's nothing we can do about it.
+
+To create a MultiPass simply call `PKMultiPass.create_multipass` and give it an array of `PKPass` objects and a valid path and filename to store your MultiPass in. Note that it must end with `.pkpasses`
+
+``` ruby
+      my_file_path = File.join(temp_dir, "#{my_order_number}.pkpasses")
+      multipass_zip_file_path = Passbook::PKMultiPass.create_multipass(
+                        array_of_pk_pass_objects, my_file_path
+                      )
+
+```
+This will return you the same path you passed in. The resulting `.pkpasses` zip file will use ordinal numbers for the names of the `.pkpass` files inside. E.g. `1.pkpass`, `2.pkpass`, `3.pkpass`, etc. 
+
+Note: if you know where the current documentation for creating MultiPass files is, please let me know. 
+
+Sending this data to users is exactly the same as sending the data for an individual pass. 
+
+-----
+
+### Original Passbook(1) functionality
+⚠ WARNING
+
+The following features & documentation come from the original passbook gem, and have _not_ been tested with Apple's current requirements. Signing _does_ work by default, but custom signing has not been tested and appears to still be thinking in terms of `.p12` files which Apple no longer honors. 
+
+Please make a PR if you make an updated version of any of this.
+
+
+#### Using Different Certificates For Different Passes
 
 Sometime you might want to be able to use different certificates for different passes.  This can be done by passing in a Signer class into your PKPass initializer. You don't have to use environment variables, but it's a good way to make these things easy to rotate in the future when the certs expire.
 
@@ -158,7 +145,7 @@ Sometime you might want to be able to use different certificates for different p
 
 If you want to support passbook push notification updates you will need to configure the appropriate bits above.
 
-In order to support push notifications you will need to have a basic understanding of the way that push notifications work and how the data is passed back and forth.  See [this](http://developer.apple.com/library/ios/#Documentation/UserExperience/Conceptual/PassKit_PG/Chapters/Creating.html) for basic information about passes and [this](http://developer.apple.com/library/ios/#Documentation/UserExperience/Conceptual/PassKit_PG/Chapters/Updating.html#//apple_ref/doc/uid/TP40012195-CH5-SW1) to understand the information that needs to be exchanged between each device and your application to support the update service.
+In order to support push notifications you will need to have a basic understanding of the way that push notifications work and how the data is passed back and forth. 
 
 Your pass will need to have a field called 'webServiceURL' with the base url to your site and a field called 'authenticationToken'. The json snippet should look like this.  Note that your url needs to be a valid signed https endpoint for production.  You can put your phone in dev mode to test updates against a insecure http endpoint (under settings => developer => passkit testing).
 
@@ -256,8 +243,9 @@ Apple will send out a notification to your phone (usually within 15 minutes or l
 
 ## Tests
 
-  To launch tests :
-```
+To launch tests:
+
+```bash
   bundle exec rake spec
 ```
 
@@ -269,19 +257,6 @@ Apple will send out a notification to your phone (usually within 15 minutes or l
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
 
-## Changelog
-
-### 0.0.4
-Allow passbook gem to return a ZipOutputStream (needed when garbage collector delete tempfile before beeing able to use it) [Thx to applidget]
-
-### 0.2.0
-Adding support for push notification updates for passes.
-
-### 0.4.0
-Adding support for using multiple signatures per gem configuration and introducing command line helpers.  More in [this](http://www.polyglotprogramminginc.com/allowing-for-more-signature-flexibility-in-the-ruby-passbook-gem/) blog post.
-
-### 0.4.1
-Update rubyzip dependency to >= 1.0.0
 
 License
 -------
