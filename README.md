@@ -101,7 +101,7 @@ In a Rails app you'd want to send the `.pkpass` data to users with the appropria
 
 ### Creating MultiPasses 
 
-Apple supports the idea of a MultiPass. This is basically juest a zipped collection of multiple passes. If, for example, someone buys 5 tickets, you can send them a MultiPass with all 5 wallet passes in it. 
+Apple supports the idea of a MultiPass. This is just a zipped collection of multiple passes. If, for example, someone buys 5 tickets, you can send them a MultiPass with all 5 wallet passes in it. 
 
 A MultiPass must contain between 1 and 10 passes (inclusive). If your user needs more than 10 items you'll just have to convince them to download multiple MultiPasses. This is annoying, but it's Apple's restriction so there's nothing we can do about it.
 
