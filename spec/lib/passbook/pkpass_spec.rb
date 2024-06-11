@@ -129,7 +129,7 @@ describe Passbook do
           let(:temp_file) { Tempfile.new('pass.pkpass') }
           let(:zip_path) do
             zip_out = pass.stream
-            zip_out.class.should eq(StringIO)
+            expect(zip_out.class).to(eq(StringIO))
             # creating file, re-reading zip to see if correctly formed
             temp_file.write zip_out.string
             temp_file.close
