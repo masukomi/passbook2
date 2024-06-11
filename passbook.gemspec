@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
     "README.md",
     "Rakefile",
     "VERSION",
-    "lib/passbook.rb",
+    "lib/passbook2.rb",
     "lib/passbook/pk_multi_pass.rb",
     "lib/passbook/pkpass.rb",
     "lib/passbook/push_notification.rb",
@@ -40,7 +40,7 @@ Gem::Specification.new do |s|
     "spec/lib/passbook/signer_spec.rb",
     "spec/spec_helper.rb"
   ]
-  s.homepage = "https://github.com/masukomi/passbook"
+  s.homepage = "https://github.com/masukomi/passbook2"
   s.licenses = ["MIT"]
   s.rubygems_version = "3.4.17"
   s.summary = "An Apple Passbook file generator."
