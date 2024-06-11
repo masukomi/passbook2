@@ -56,8 +56,8 @@ describe Passbook do
   describe '#file' do
     context 'when adding a file as File' do
       before do
-        pass.addFile(File.new("#{base_path}/icon.png"))
-        pass.addFiles(
+        pass.add_file(File.new("#{base_path}/icon.png"))
+        pass.add_files(
           [
             "#{base_path}/icon@2x.png",
             "#{base_path}/logo.png",
@@ -74,8 +74,8 @@ describe Passbook do
     end
     context 'when adding files as strings' do
       before do
-        pass.addFile("#{base_path}/icon.png")
-        pass.addFiles(
+        pass.add_file("#{base_path}/icon.png")
+        pass.add_files(
           [
             "#{base_path}/icon@2x.png",
             "#{base_path}/logo.png",
@@ -154,7 +154,7 @@ describe Passbook do
       let(:base_path) { 'spec/data' }
 
       before :each do
-        pass.addFiles ["#{base_path}/icon.png", "#{base_path}/icon@2x.png", "#{base_path}/logo.png",
+        pass.add_files ["#{base_path}/icon.png", "#{base_path}/icon@2x.png", "#{base_path}/logo.png",
                        "#{base_path}/logo@2x.png"]
         tpass = JSON.parse(pass.pass)
         tpass['formatVersion'] = 'It should be a numeric'

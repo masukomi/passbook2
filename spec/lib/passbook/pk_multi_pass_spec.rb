@@ -30,7 +30,7 @@ describe Passbook do
   let(:passes){ [pass, pass] }
 
   before :each do
-    pass.addFiles(
+    pass.add_files(
       [
         "#{base_path}/icon.png",
         "#{base_path}/icon@2x.png",

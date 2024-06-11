@@ -7,7 +7,7 @@ module Passbook
   class PKPass
     attr_accessor :pass, :manifest_files, :signer
 
-    TYPES = ['boarding-pass', 'coupon', 'event-ticket', 'store-card', 'generic']
+    TYPES = %w(boarding-pass coupon event-ticket store-card generic)
 
     def initialize(pass, init_signer = nil)
       @pass           = pass
@@ -15,39 +15,22 @@ module Passbook
       @signer         = init_signer || Passbook::Signer.new
     end
 
-    def addFile(file)
+    # Adds a single file to the pass
+    def add_file(file)
       @manifest_files << file
     end
 
-    def addFiles(files)
-      @manifest_files += files
+    # Adds multiple files to the pass
+    def add_files(files_array)
+      @manifest_files += files_array
     end
 
-    def files
+    # List of files in the pass
+    def list_files
       @manifest_files
     end
 
-    # for backwards compatibility
-    def json=(json)
-      @pass = json
-    end
 
-    def build
-      manifest = createManifest
-
-      # Check pass for necessary files and fields
-      checkPass manifest
-
-      # Create pass signature
-      signature = @signer.sign manifest
-
-      [manifest, signature]
-    end
-
-    # Backward compatibility
-    def create
-      self.file.path
-    end
 
     # Return a Tempfile containing our ZipStream
     # @param options [Hash] :file_name, :directory
@@ -69,12 +52,29 @@ module Passbook
     def stream
       manifest, signature = build
 
-      outputZip manifest, signature
+      output_zip manifest, signature
     end
 
+    # Builds the pass.
+    # Creates the manifest, checks for necessary files and fields
+    # Returns an array with the manifest and the pass' cryptographic signature
+    # Don't call this unless you have a specific need. Use #file or #stream instead
+    def build
+      manifest = create_manifest
+
+      # Check pass for necessary files and fields
+      check_pass manifest
+
+      # Create pass signature
+      signature = @signer.sign manifest
+
+      [manifest, signature]
+    end
+
+    ## PRIVATE METHODS ##############################################################
     private
 
-    def checkPass(manifest)
+    def check_pass(manifest)
       # Check for default images
       raise 'Icon missing' unless manifest.include?('icon.png')
       raise 'Icon@2x missing' unless manifest.include?('icon@2x.png')
@@ -89,7 +89,7 @@ module Passbook
       raise 'Description' unless @pass.include?('description')
     end
 
-    def createManifest
+    def create_manifest
       sha1s = {}
       sha1s['pass.json'] = Digest::SHA1.hexdigest @pass
 
@@ -105,7 +105,7 @@ module Passbook
       sha1s.to_json
     end
 
-    def outputZip(manifest, signature)
+    def output_zip(manifest, signature)
 
       Zip::OutputStream.write_buffer do |zip|
         zip.put_next_entry 'pass.json'

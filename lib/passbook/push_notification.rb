@@ -4,8 +4,8 @@ module Passbook
       def pusher
         @pusher ||= Grocer.pusher(
           :certificate => Passbook.notification_cert,
-          :passphrase => Passbook.notification_passphrase || "",
-          :gateway => Passbook.notification_gateway
+          :passphrase  => Passbook.notification_passphrase || "",
+          :gateway     => Passbook.notification_gateway
         )
       end
 
