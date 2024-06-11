@@ -1,13 +1,13 @@
 # passbook2
 
-The passbook gem let's you create a pkpass files for Apple's PassKit. 
+The passbook2 gem let's you create a pkpass files for Apple's PassKit. 
 It is a fork of the "passbook" gem that has been updated to work with OpenSSL 3.0 and Ruby 3.x. It no longer uses p12 files which because they are no longer supported by Apple.
 
 Apple's [PassKit](https://developer.apple.com/documentation/passkit_apple_pay_and_wallet) is used for processing Apple Pay payments & distributing tickets. This library is currently concerned with simplifying the process of generating a `.pass` bundle for distribution to your users. It's been thoroughly tested as a means of distributing even tickets to iOS devices.
 
 This library does _not_ address updating information on tickets you've already distributed.
 
-Note: This is a fork of the original passbook gem that supports Apple's current requirements & cleans up a bunch of things. The original gem has been abandoned for years. 
+Note: This is a fork of [the original passbook gem](https://github.com/frozon/passbook). In addition to a lot of cleanup, it has been updated to support Ruby 3.0 and Apple's current cryptographic requirements.
 
 ## Installation
 
@@ -54,6 +54,11 @@ gem 'passbook2'
 
 ```
 
+Additional (optional) configuration variables:
+- `notification_cert`
+- `notification_gateway`
+- `notification_passphrase`
+
 
 ## Usage
 
@@ -70,7 +75,7 @@ Then iterate over the files you need to add to the pass. The order you add them 
     pass.add_files(["path/to/icon@2x.png", "path/to/thumbnail.png"])
 ```
 
-![sample.pass](https://docs-assets.developer.apple.com/published/8d0b7a8673/rendered2x-1616606782.png)
+![sample.pass](https://github.com/masukomi/passbook2/blob/master/docs/images/passbook_file_structure.png?raw=true)
 
 Once you've added everything you need to your pass, it's time to generate the `.pkpass` zip file. 
 
