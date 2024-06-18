@@ -3,7 +3,7 @@
 The passbook2 gem let's you create a pkpass files for Apple's PassKit. 
 It is a fork of the "passbook" gem that has been updated to work with OpenSSL 3.0 and Ruby 3.x. It no longer uses p12 files which because they are no longer supported by Apple.
 
-Apple's [PassKit](https://developer.apple.com/documentation/passkit_apple_pay_and_wallet) is used for processing Apple Pay payments & distributing tickets. This library is currently concerned with simplifying the process of generating a `.pass` bundle for distribution to your users. It's been thoroughly tested as a means of distributing even tickets to iOS devices.
+Apple's [PassKit](https://developer.apple.com/documentation/passkit_apple_pay_and_wallet) is used for processing Apple Pay payments & distributing tickets. This library is currently concerned with simplifying the process of generating a `.pass` bundle for distribution to your users. It's been thoroughly tested as a means of distributing event tickets to iOS devices.
 
 This library does _not_ address updating information on tickets you've already distributed.
 
